@@ -35,11 +35,13 @@ GazeboRosCreate::GazeboRosCreate()
 
 GazeboRosCreate::~GazeboRosCreate()
 {
-  rosnode_->shutdown();
+  if (rosnode_) {
+    rosnode_->shutdown();
+    delete rosnode_;
+  }
   this->spinner_thread_->join();
   delete this->spinner_thread_;
   delete [] wheel_speed_;
-  delete rosnode_;
 }
     
 void GazeboRosCreate::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
@@ -91,27 +93,14 @@ void GazeboRosCreate::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (_sdf->HasElement("torque"))
     torque_ = _sdf->GetElement("torque")->GetValueDouble();
 
-
-  //base_geom_name_ = "base_geom";
-  base_geom_name_ = "base_footprint_geom_base_link";
+  base_geom_name_ = "base";
   if (_sdf->HasElement("base_geom"))
     base_geom_name_ = _sdf->GetElement("base_geom")->GetValueString();
   base_geom_ = my_parent_->GetChildCollision(base_geom_name_);
-  if (!base_geom_)
-  {
-    // This is a hack for ROS Diamond back. E-turtle and future releases
-    // will not need this, because it will contain the fixed-joint reduction
-    // in urdf2gazebo
-    base_geom_ = my_parent_->GetChildCollision("base_footprint_geom");
-    if (!base_geom_)
-    {
-      ROS_ERROR("Unable to find geom[%s]",base_geom_name_.c_str());
-      return;
-    }
-  }
 
-  base_geom_->SetContactsEnabled(true);
-  contact_event_ = base_geom_->ConnectContact(boost::bind(&GazeboRosCreate::OnContact, this, _1, _2));
+  //FIXME: Find out why this segfaults
+  //base_geom_->SetContactsEnabled(true);
+  //contact_event_ = base_geom_->ConnectContact(boost::bind(&GazeboRosCreate::OnContact, this, _1, _2));
 
   // Get then name of the parent model
   std::string modelName = _sdf->GetParent()->GetValueString("name");
@@ -273,7 +262,6 @@ void GazeboRosCreate::UpdateChild()
   odom_vel_[0] = dr / step_time.Double();
   odom_vel_[1] = 0.0;
   odom_vel_[2] = da / step_time.Double();
-
 
   if (set_joints_[LEFT])
   {

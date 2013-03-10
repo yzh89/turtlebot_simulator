@@ -1,4 +1,9 @@
 <launch>
+  <!-- Environment variable setup -->
+  <env name="GAZEBO_PLUGIN_PATH" value="$(find create_gazebo_plugins)/lib"/>
+  <env name="GAZEBO_MODEL_PATH" value="$(find turtlebot_description)/robots"/>
+
+  <!-- Below args aren't used at the moment. The above two exports allow the models and plugins to work with the Gazebo model browser -->
   <arg name="base" value="$(optenv TURTLEBOT_BASE kobuki)"/> <!-- create, rhoomba -->
   <arg name="battery"    value="$(optenv TURTLEBOT_BATTERY /proc/acpi/battery/BAT0)"/>  <!-- /proc/acpi/battery/BAT0 --> 
   <arg name="stacks"     value="$(optenv TURTLEBOT_STACKS hexagons)"/>  <!-- circles, hexagons --> 
@@ -7,14 +12,16 @@
   <!-- start gazebo with an empty plane -->
   <param name="/use_sim_time" value="true" />
 
-  <node name="gazebo" pkg="gazebo" type="debug" args="-u $(find turtlebot_gazebo)/worlds/empty.world" respawn="false" output="screen"/>
+  <node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find turtlebot_gazebo)/worlds/empty.world" respawn="false" output="screen"/>
   <node name="gazebo_gui" pkg="gazebo" type="gui" />
 
+<!--
+  This may or may not return
   <include file="$(find turtlebot_gazebo)/launch/_$(arg base).launch">
     <arg name="base" value="$(arg base)"/>
     <arg name="stacks" value="$(arg stacks)"/>
     <arg name="3d_sensor" value="$(arg 3d_sensor)"/>
-
-     
   </include>
+-->
+
 </launch>
